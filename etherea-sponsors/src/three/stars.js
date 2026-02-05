@@ -1,62 +1,53 @@
 import * as THREE from "three";
 
-/**
- * Creates a high-quality circular glow texture.
- */
 function createCircleTexture() {
-  const size = 128;
   const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
+  canvas.width = canvas.height = 64;
   const ctx = canvas.getContext("2d");
-  const center = size / 2;
-
-  const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
-
-  // GAUSSIAN FALLOFF: 
-  // This creates a bright core that bleeds into a soft, blurred edge.
-  gradient.addColorStop(0, "rgba(255, 255, 255, 1)");   // Solid white core
-  gradient.addColorStop(0.1, "rgba(255, 255, 255, 0.9)"); // Slight spread
-  gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.2)"); // Soft blur starts
-  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");   // Completely transparent
-
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+  gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.4)");
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
-  return texture;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(canvas);
 }
 
-/**
- * @param {number} count - DENSITY: How many stars in the scene.
- * @param {number} brightness - BRIGHTNESS: 0.0 to 1.0 (multiplier for star color).
- */
-export function createStars({ count = 5000, spread = 2000, size = 4.0, brightness = 0.8 }) {
+export function createStars({ count = 18000, spread = 4500, size = 3.5 }) {
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
-
-  const baseColor = new THREE.Color("#b0e5ff");
-  const whiteColor = new THREE.Color("#ffffff");
+  const color = new THREE.Color();
 
   for (let i = 0; i < count; i++) {
     const i3 = i * 3;
-    positions[i3] = (Math.random() - 0.5) * spread;
-    positions[i3 + 1] = (Math.random() - 0.5) * spread;
-    positions[i3 + 2] = (Math.random() - 0.5) * spread;
+    
+    // 75% stars cluster in the nebula core
+    const isCoreStar = Math.random() < 0.75;
+    const currentSpread = isCoreStar ? spread * 0.45 : spread;
 
-    // --- TUNING BRIGHTNESS ---
-    // This creates a mix of very bright "hero" stars and dim background stars.
-    const individualVariation = Math.random() < 0.15 ? 1.0 : 0.4;
-    const finalBrightness = individualVariation * brightness; 
+    const x = (Math.random() - 0.5) * currentSpread;
+    const y = (Math.random() - 0.5) * currentSpread;
+    const z = (Math.random() - 0.5) * (currentSpread * 0.5);
 
-    const mixedColor = baseColor.clone().lerp(whiteColor, Math.random() * 0.5);
+    positions[i3] = x;
+    positions[i3 + 1] = y;
+    positions[i3 + 2] = z;
 
-    colors[i3] = mixedColor.r * finalBrightness;
-    colors[i3 + 1] = mixedColor.g * finalBrightness;
-    colors[i3 + 2] = mixedColor.b * finalBrightness;
+    // Luminosity falloff: darker towards the edges
+    const distFromCenter = Math.sqrt(x * x + y * y + z * z);
+    const distanceFactor = Math.max(0.1, 1 - distFromCenter / (spread * 0.7));
+    const brightness = (Math.random() * 0.6 + 0.4) * distanceFactor;
+
+    if (isCoreStar) {
+      color.setHSL(0.55 + Math.random() * 0.1, 0.6, brightness); // Cyan/White tint
+    } else {
+      color.set(0xffffff).multiplyScalar(brightness * 0.5);
+    }
+
+    colors[i3] = color.r;
+    colors[i3 + 1] = color.g;
+    colors[i3 + 2] = color.b;
   }
 
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -69,7 +60,6 @@ export function createStars({ count = 5000, spread = 2000, size = 4.0, brightnes
       map: createCircleTexture(),
       vertexColors: true,
       transparent: true,
-      opacity: 1.0, // Control global brightness/transparency here
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
