@@ -38,6 +38,7 @@ export function initScene(container) {
     
     galaxyGroup.rotation.y += 0.00040;
     galaxyGroup.rotation.x += 0.00040;
+    galaxyGroup.rotation.z += 0.00040;
 
     nebula.children.forEach((sprite, i) => {
       sprite.rotation.z += 0.0005 * (i % 2 === 0 ? 1 : -1);
