@@ -4,16 +4,16 @@ function createCircleTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 64;
   const ctx = canvas.getContext("2d");
-  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  const gradient = ctx.createRadialGradient(32, 32, 0, 0, 32, 32);
   gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-  gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.4)");
-  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+  gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.6)");
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0.1)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(canvas);
 }
 
-export function createStars({ count = 18000, spread = 4500, size = 3.5 }) {
+export function createStars({ count = 10000, spread = 4500, size = 3.5 }) {
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);

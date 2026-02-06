@@ -9,8 +9,8 @@ export function createOrbits(customOrbits = []) {
   const group = new THREE.Group();
 
   const defaultOrbitData = [
-    { name: "Inner", major: 400, minor: 232, tiltX: 36, x: 0, y: 0, z: -100, color: 0x9f9f9f },
-    { name: "Middle", major: 600, minor: 366, tiltX: 36, x: 0, y: -100, z: -100, color:0x9f9f9f },
+    { name: "Inner", major: 400, minor: 232, tiltX: 36, x: 0, y: 0, z: -100, color: 0x3f3f3f },
+    { name: "Middle", major: 600, minor: 366, tiltX: 36, x: 0, y: -100, z: -100, color:0x7f7f7f },
     { name: "Outer", major: 900, minor: 528, tiltX: 36, x: 0, y: -230, z: -100, color: 0x9f9f9f },
   ];
 
