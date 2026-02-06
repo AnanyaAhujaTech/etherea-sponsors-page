@@ -39,7 +39,7 @@ export function initScene(container) {
   const nebula = createNebula();
   galaxyGroup.add(nebula);
 
-  const stars = createStars({ count: 25000, spread: 4000, size: 3.0 });
+  const stars = createStars({ count: 5000, spread: 4000, size: 3.0 });
   galaxyGroup.add(stars);
 
   galaxyGroup.position.z = -400; 

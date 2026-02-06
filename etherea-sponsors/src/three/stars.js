@@ -4,16 +4,16 @@ function createCircleTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 64;
   const ctx = canvas.getContext("2d");
-  const gradient = ctx.createRadialGradient(32, 32, 0, 0, 32, 32);
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-  gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.6)");
-  gradient.addColorStop(1, "rgba(255, 255, 255, 0.1)");
+  gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.9)");
+  gradient.addColorStop(1, "rgba(49, 48, 48, 0.3)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(canvas);
 }
 
-export function createStars({ count = 10000, spread = 4500, size = 3.5 }) {
+export function createStars({ count = 5000, spread = 3000, size = 3.5 }) {
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -35,7 +35,7 @@ export function createStars({ count = 10000, spread = 4500, size = 3.5 }) {
     positions[i3 + 2] = z;
 
     // Luminosity falloff: darker towards the edges
-    const distFromCenter = Math.sqrt(x * x + y * y + z * z);
+    const distFromCenter = Math.sqrt(x * x + y * y + z);
     const distanceFactor = Math.max(0.1, 1 - distFromCenter / (spread * 0.7));
     const brightness = (Math.random() * 0.6 + 0.4) * distanceFactor;
 
