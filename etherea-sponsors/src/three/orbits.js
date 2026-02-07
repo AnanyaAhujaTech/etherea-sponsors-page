@@ -1,22 +1,21 @@
 import * as THREE from "three";
 
+// EXPORTED CONFIGURATION
+// We export this so the Sponsor system knows where the rings are.
+export const ORBIT_DEFINITIONS = [
+  { name: "Inner",  major: 400, minor: 232, tiltX: 40, x: 0, y: 0,    z: -150, color: 0x3f3f3f },
+  { name: "Middle", major: 600, minor: 366, tiltX: 40, x: 0, y: -100, z: -100, color: 0x7f7f7f },
+  { name: "Outer",  major: 900, minor: 528, tiltX: 40, x: 0, y: -230, z: -100, color: 0x9f9f9f },
+];
+
 /**
- * Creates a group of soft, volumetric elliptical orbits in white.
- * @param {Array} customOrbits - Custom configuration array.
- * @returns {THREE.Group}
+ * Creates a group of soft, volumetric elliptical orbits.
+ * Uses the exported ORBIT_DEFINITIONS by default.
  */
-export function createOrbits(customOrbits = []) {
+export function createOrbits() {
   const group = new THREE.Group();
 
-  const defaultOrbitData = [
-    { name: "Inner", major: 400, minor: 232, tiltX: 36, x: 0, y: 0, z: -100, color: 0x3f3f3f },
-    { name: "Middle", major: 600, minor: 366, tiltX: 36, x: 0, y: -100, z: -100, color:0x7f7f7f },
-    { name: "Outer", major: 900, minor: 528, tiltX: 36, x: 0, y: -230, z: -100, color: 0x9f9f9f },
-  ];
-
-  const orbitData = customOrbits.length > 0 ? customOrbits : defaultOrbitData;
-
-  orbitData.forEach((data) => {
+  ORBIT_DEFINITIONS.forEach((data) => {
     const orbitContainer = new THREE.Group();
 
     // 1. Create the Ellipse Path
@@ -60,7 +59,7 @@ export function createOrbits(customOrbits = []) {
     orbitContainer.position.set(data.x || 0, data.y || 0, data.z || 0);
     orbitContainer.rotation.x = (data.tiltX || 0) * (Math.PI / 180);
     
-    // Support for individual Y and Z rotations if provided in data
+    // Support for individual Y and Z rotations if provided
     if (data.tiltY) orbitContainer.rotation.y = data.tiltY * (Math.PI / 180);
     if (data.tiltZ) orbitContainer.rotation.z = data.tiltZ * (Math.PI / 180);
 

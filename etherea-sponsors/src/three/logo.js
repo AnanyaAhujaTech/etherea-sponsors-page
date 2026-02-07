@@ -1,135 +1,126 @@
 import * as THREE from "three";
-
-// IMPORT IMAGES directly so Vite bundles them
 import festLogoWhiteUrl from "../assets/fest-logo-white.png";
 import festLogoColorUrl from "../assets/fest-logo.png";
 
-/**
- * CONFIGURATION
- * Tweak these values to adjust the visuals.
- */
-const CONFIG = {
-  width: 220,              
-  height: 220,             
-  tiltXDeg: 30,             
-  hoverSpeed: 0.6,         
-  hoverScaleGrowth: 1.0,   
-  glowScale: 1.5,          
-  glowOpacity: 0.25,       
-  zPosition: 0.15,            
+// --- CONFIGURATION ---
+// Adjust these to match the "feel" of your sponsors
+const LOGO_CONFIG = {
+  // Animation Physics
+  hoverSpeed: 0.45,        // 0.05 = Slow/Fluid, 0.5 = Snappy
+  hoverScaleGrowth: 1.05,   // 1.2 = 20% larger on hover
+  defaultScale: 1.0,
+  
+  // Visuals
+  size: 220,               // Base size width
+  tiltXDeg: 30,            // Tilted back to fit the floor perspective
+  zPosition: 0.15,
+  glowOpacity: 0.45,
 };
 
 export function createLogo() {
   const group = new THREE.Group();
   const loader = new THREE.TextureLoader();
 
-  // ---------------------------------------------------------
-  // 1. Textures (Loaded from imports)
-  // ---------------------------------------------------------
-  const texWhite = loader.load(festLogoWhiteUrl);
-  const texColor = loader.load(festLogoColorUrl);
+  // Variables to hold meshes (accessed in update loop)
+  let meshWhite, meshColor;
 
-  // Optimize textures for crisp edges
-  [texWhite, texColor].forEach((t) => {
-    t.minFilter = THREE.LinearFilter;
-    t.magFilter = THREE.LinearFilter;
-    t.colorSpace = THREE.SRGBColorSpace; // Ensure colors look correct
+  // --- 1. Texture Loading & Aspect Ratio Fix ---
+  const onLoadTexture = (tex) => {
+    // Determine aspect ratio (width / height)
+    const aspect = tex.image.width / tex.image.height;
+    
+    // Apply aspect ratio to meshes if they exist
+    if (meshWhite) meshWhite.scale.x = aspect;
+    if (meshColor) meshColor.scale.x = aspect;
+    
+    // Optional: Adjust texture filtering for sharpness
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+  };
+
+  const texWhite = loader.load(festLogoWhiteUrl, onLoadTexture);
+  const texColor = loader.load(festLogoColorUrl, (tex) => {
+     // Ensure color texture also has correct settings
+     tex.minFilter = THREE.LinearFilter;
+     tex.magFilter = THREE.LinearFilter;
+     tex.colorSpace = THREE.SRGBColorSpace;
   });
 
-  // ---------------------------------------------------------
-  // 2. Geometry
-  // ---------------------------------------------------------
-  const geometry = new THREE.PlaneGeometry(CONFIG.width, CONFIG.height);
+  // --- 2. Geometry & Materials ---
+  const geometry = new THREE.PlaneGeometry(LOGO_CONFIG.size, LOGO_CONFIG.size);
 
-  // ---------------------------------------------------------
-  // 3. Materials
-  // ---------------------------------------------------------
-  
-  // Base White Logo Material
   const matWhite = new THREE.MeshBasicMaterial({
     map: texWhite,
     transparent: true,
-    opacity: 1, // Starts fully visible
+    opacity: 1,
     depthWrite: false,
     side: THREE.FrontSide,
   });
 
-  // Colored Hover Logo Material
   const matColor = new THREE.MeshBasicMaterial({
     map: texColor,
     transparent: true,
-    opacity: 0, // Starts invisible
+    opacity: 0,
     depthWrite: false,
     side: THREE.FrontSide,
   });
 
-  // ---------------------------------------------------------
-  // 4. Meshes
-  // ---------------------------------------------------------
-  
-  // We create two identical meshes.
-  // The Colored one sits *tiny* bit in front to prevent Z-fighting
-  const meshWhite = new THREE.Mesh(geometry, matWhite);
-  const meshColor = new THREE.Mesh(geometry, matColor);
-  meshColor.position.z = 0.5; 
+  // --- 3. Meshes ---
+  meshWhite = new THREE.Mesh(geometry, matWhite);
+  meshColor = new THREE.Mesh(geometry, matColor);
+  meshColor.position.z = 0.5; // Slight offset to prevent Z-fighting
 
   group.add(meshWhite);
   group.add(meshColor);
 
-  // ---------------------------------------------------------
-  // 5. The Glow (Halo) - EXACTLY AS PROVIDED
-  // ---------------------------------------------------------
+  // --- 4. The Glow (Halo) ---
   const glowTexture = createGlowTexture();
   const glowMaterial = new THREE.SpriteMaterial({
     map: glowTexture,
     color: 0xffffff,
     transparent: true,
-    opacity: CONFIG.glowOpacity,
+    opacity: LOGO_CONFIG.glowOpacity,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
   
   const glowSprite = new THREE.Sprite(glowMaterial);
-  // Scale the glow relative to the logo size
-  const scale = Math.max(CONFIG.width, CONFIG.height) * CONFIG.glowScale;
-  glowSprite.scale.set(scale, scale, 1);
-  // Push glow slightly behind
-  glowSprite.position.z = -5;
+
+  glowSprite.raycast = () => {};
+
+  // Scale glow based on config size
+  const glowScale = LOGO_CONFIG.size * 0.4;
+  glowSprite.scale.set(glowScale, glowScale, 1);
+  glowSprite.position.z = -10; // Behind the logo
   
   group.add(glowSprite);
 
-  // ---------------------------------------------------------
-  // 6. Positioning & Rotation
-  // ---------------------------------------------------------
-  group.position.set(0, 20, CONFIG.zPosition);
-  group.rotation.x = THREE.MathUtils.degToRad(CONFIG.tiltXDeg);
+  // --- 5. Positioning ---
+  // Center of scene, but tilted and lifted slightly
+  group.position.set(0, 20, LOGO_CONFIG.zPosition);
+  group.rotation.x = THREE.MathUtils.degToRad(LOGO_CONFIG.tiltXDeg);
 
-  // ---------------------------------------------------------
-  // 7. Update Logic (Animation)
-  // ---------------------------------------------------------
-  // Current mix state: 0 = White, 1 = Color
-  let currentMix = 0;
-  // Current scale state: Starts at 1
-  let currentScale = 1; 
+  // --- 6. Animation State ---
+  let currentMix = 0; // 0 = White, 1 = Color
+  let currentScale = LOGO_CONFIG.defaultScale;
 
-  /**
-   * Updates the logo appearance based on hover state.
-   * Call this every frame.
-   * @param {boolean} isHovered 
-   */
   function update(isHovered) {
-    // 1. Opacity Transition
+    // Safety check: ensure meshes are created
+    if (!meshWhite || !meshColor) return;
+
+    // A. Opacity Transition (Lerp)
     const targetMix = isHovered ? 1 : 0;
-    currentMix += (targetMix - currentMix) * CONFIG.hoverSpeed;
+    currentMix += (targetMix - currentMix) * LOGO_CONFIG.hoverSpeed;
 
     meshWhite.material.opacity = 1 - currentMix;
     meshColor.material.opacity = currentMix;
 
-    // 2. Scale Transition (ADDED)
-    const targetScale = isHovered ? CONFIG.hoverScaleGrowth : 1;
-    currentScale += (targetScale - currentScale) * CONFIG.hoverSpeed;
-    
-    // Apply scale to the whole group (logo + glow)
+    // B. Scale Transition (Lerp)
+    const targetScale = isHovered ? LOGO_CONFIG.hoverScaleGrowth : LOGO_CONFIG.defaultScale;
+    currentScale += (targetScale - currentScale) * LOGO_CONFIG.hoverSpeed;
+
+    // Apply scale to the whole group (affects logo + glow uniformly)
     group.scale.set(currentScale, currentScale, 1);
   }
 
@@ -137,7 +128,7 @@ export function createLogo() {
 }
 
 /**
- * Helper to create a radial gradient texture for the glow
+ * Helper: Radial Gradient Texture
  */
 function createGlowTexture() {
   const canvas = document.createElement("canvas");
@@ -145,11 +136,10 @@ function createGlowTexture() {
   canvas.height = 128;
   const ctx = canvas.getContext("2d");
   
-  // Radial Gradient: Center White -> Outer Transparent
   const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gradient.addColorStop(0, "rgba(255, 255, 255, 1)");   // Bright center
-  gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.2)"); // Soft falloff
-  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");     // Transparent edge
+  gradient.addColorStop(0, "rgba(255, 255, 255, 1)");   
+  gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.2)"); 
+  gradient.addColorStop(1, "rgba(255, 255, 255, 0)");     
   
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 128, 128);
