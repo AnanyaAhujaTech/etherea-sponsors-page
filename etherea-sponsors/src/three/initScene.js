@@ -3,7 +3,8 @@ import { createStars } from "./stars";
 import { createNebula } from "./nebula";
 import { createOrbits } from "./orbits";
 import { createLogo } from "./logo"; 
-import { createSponsorToken } from "./sponsors"; 
+import { createSponsorToken } from "./sponsors";
+import { createHeading } from "./heading"; // <--- 1. IMPORT THIS
 
 // Placeholder Images
 import LogoWhiteUrl from "../assets/logo-white.png";
@@ -28,7 +29,7 @@ export function initScene(container) {
 
   // 2. Interaction Setup
   const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2(-1000, -1000); // Start off-screen
+  const pointer = new THREE.Vector2(-1000, -1000);
 
   function onPointerMove(event) {
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -36,15 +37,12 @@ export function initScene(container) {
   }
   window.addEventListener( 'mousemove', onPointerMove );
 
-  // 3. Environment (Galaxy Group)
+  // 3. Environment
   const galaxyGroup = new THREE.Group();
-  
   const nebula = createNebula();
   galaxyGroup.add(nebula);
-
   const stars = createStars({ count: 8000, spread: 4500, size: 5.0 });
   galaxyGroup.add(stars);
-
   galaxyGroup.position.z = -400; 
   scene.add(galaxyGroup);
 
@@ -56,17 +54,20 @@ export function initScene(container) {
   const logo = createLogo(); 
   scene.add(logo.group);
 
-  // 6. Sponsors
+  // 6. Heading (Partners in Creation)
+  const heading = createHeading(); // <--- 2. CREATE HEADING
+  scene.add(heading.group);        // <--- 3. ADD TO SCENE
+
+  // 7. Sponsors
   const sponsorManagers = []; 
 
   function addSponsor(config) {
-    // Note: We pass the camera so the sponsors can lookAt() it every frame
     const { group, update } = createSponsorToken({ ...config, camera });
     scene.add(group);
     sponsorManagers.push({ group, update });
   }
 
-  // Add Sponsors
+  // --- Add Sponsors ---
   addSponsor({
     name: "Sponsor A",
     orbitIndex: 0,
@@ -93,37 +94,35 @@ export function initScene(container) {
     angleDegree: 300,
     imageWhitePath: LogoWhiteUrl,
     imageColorPath: LogoColorUrl,
-    size: 50,
+    size: 80,
     lift: 25
   });
 
-  // 7. Animation Loop
+  // 8. Animation Loop
   let animationFrameId;
 
   function animate() {
     animationFrameId = requestAnimationFrame(animate);
     
     // Environment Rotation
-    galaxyGroup.rotation.y += 0.00090;
-    galaxyGroup.rotation.z += 0.00090;
+    galaxyGroup.rotation.z += 0.00080;
 
     nebula.children.forEach((sprite, i) => {
-      sprite.rotation.z += 0.05 * (i % 2 === 0 ? 1 : -1);
+      sprite.rotation.x += 0.05 * (i % 2 === 0 ? 1 : -1);
     });
 
     // Interaction Logic
     raycaster.setFromCamera( pointer, camera );
 
-    // A. Center Logo Interaction
+    // Updates
     const logoIntersects = raycaster.intersectObjects( logo.group.children );
     logo.update(logoIntersects.length > 0);
+    
+    // Update Heading (Float + Billboarding)
+    heading.update(camera); // <--- 4. UPDATE HEADING
 
-    // B. Sponsor Interaction & Orbit Movement
     sponsorManagers.forEach((sponsor) => {
-       // Check for hover
        const hits = raycaster.intersectObjects(sponsor.group.children);
-       
-       // Update Sponsor (Handles Rotation + Hover)
        sponsor.update(hits.length > 0);
     });
     
@@ -132,7 +131,7 @@ export function initScene(container) {
 
   animate();
 
-  // 8. Resize Handler
+  // 9. Resize Handler
   function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -141,7 +140,7 @@ export function initScene(container) {
 
   window.addEventListener("resize", onResize);
 
-  // 9. Cleanup
+  // 10. Cleanup
   return () => {
     window.removeEventListener("resize", onResize);
     window.removeEventListener("mousemove", onPointerMove);

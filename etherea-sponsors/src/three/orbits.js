@@ -38,7 +38,7 @@ export function createOrbits() {
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0x545454,
       transparent: true,
-      opacity: 0.001,
+      opacity: 0.004,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -47,9 +47,9 @@ export function createOrbits() {
     // 3. Glow Mesh (The "Softness")
     const glowGeo = new THREE.TubeGeometry(path, 128, 2.0, 8, true);
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0x545454,
+      color: 0xededed,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.15,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });

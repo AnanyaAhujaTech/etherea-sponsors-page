@@ -5,18 +5,18 @@ const LOADER = new THREE.TextureLoader();
 
 const SPONSOR_CONFIG = {
   // --- ANIMATION SPEED CONTROL ---
-  // Speed of the orbit rotation (Radians per frame)
-  // 0.0005 = Very Slow
-  // 0.0020 = Moderate
-  orbitSpeed: 0.0035, 
-  
-  // Speed of the hover/scale effect
+  orbitSpeed: 0.0010, 
   hoverSpeed: 0.35,  
-  // -------------------------------
   
+  // --- VISUALS ---
   hoverScaleGrowth: 1.4,
   defaultScale: 1.0,
   glowOpacity: 0.4,
+  
+  // *** TRANSPARENCY CONTROL ***
+  // 1.0 = Fully Solid
+  // 0.7 = 70% Visible (Ghostly)
+  baseOpacity: 0.7, 
 };
 
 /**
@@ -38,9 +38,12 @@ export function createSponsorToken({
   let meshWhite, meshColor;
 
   const onLoadTexture = (tex) => {
-    const aspect = tex.image.width / tex.image.height;
-    if (meshWhite) meshWhite.scale.x = aspect;
-    if (meshColor) meshColor.scale.x = aspect;
+    // Safety check: calculate aspect only if image loaded successfully
+    if (tex.image && tex.image.width && tex.image.height) {
+      const aspect = tex.image.width / tex.image.height;
+      if (meshWhite) meshWhite.scale.x = aspect;
+      if (meshColor) meshColor.scale.x = aspect;
+    }
   };
 
   const texWhite = LOADER.load(imageWhitePath, onLoadTexture);
@@ -58,7 +61,7 @@ export function createSponsorToken({
   const matWhite = new THREE.MeshBasicMaterial({
     map: texWhite,
     transparent: true,
-    opacity: 1,
+    opacity: SPONSOR_CONFIG.baseOpacity, // Start with base opacity
     depthWrite: false,
     side: THREE.FrontSide,
   });
@@ -119,18 +122,20 @@ export function createSponsorToken({
     const targetMix = isHovered ? 1 : 0;
     currentMix += (targetMix - currentMix) * SPONSOR_CONFIG.hoverSpeed;
 
-    meshWhite.material.opacity = 1 - currentMix;
-    meshColor.material.opacity = currentMix;
+    // Fade white out as color fades in
+    if (meshWhite && meshWhite.material) {
+        meshWhite.material.opacity = (1 - currentMix) * SPONSOR_CONFIG.baseOpacity;
+    }
+    if (meshColor && meshColor.material) {
+        meshColor.material.opacity = currentMix;
+    }
     
     // C. HOVER SCALE LOGIC
     const targetScale = isHovered ? SPONSOR_CONFIG.hoverScaleGrowth : SPONSOR_CONFIG.defaultScale;
     currentScale += (targetScale - currentScale) * SPONSOR_CONFIG.hoverSpeed;
     group.scale.set(currentScale, currentScale, 1);
 
-    // D. BILLBOARDING (THE FIX)
-    // Instead of looking at the camera position (which causes tilt),
-    // we copy the camera's orientation. This makes the logo plane
-    // perfectly parallel to the screen at all times.
+    // D. BILLBOARDING
     if (camera) {
       group.quaternion.copy(camera.quaternion);
     }

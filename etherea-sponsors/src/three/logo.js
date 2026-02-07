@@ -11,7 +11,7 @@ const LOGO_CONFIG = {
   defaultScale: 1.0,
   
   // Visuals
-  size: 220,               // Base size width
+  size: 200,               // Base size width
   tiltXDeg: 30,            // Tilted back to fit the floor perspective
   zPosition: 0.15,
   glowOpacity: 0.45,
@@ -90,7 +90,7 @@ export function createLogo() {
   glowSprite.raycast = () => {};
 
   // Scale glow based on config size
-  const glowScale = LOGO_CONFIG.size * 0.4;
+  const glowScale = LOGO_CONFIG.size * 1.0;
   glowSprite.scale.set(glowScale, glowScale, 1);
   glowSprite.position.z = -10; // Behind the logo
   
