@@ -2,10 +2,10 @@
 import * as THREE from "three";
 
 const CONFIG = {
-  lineColor: 0xffffff, // Slightly warm
+  lineColor: 0xffeebb, // Slightly warm
   starColor: 0xffffff,
   passiveOpacity: 0.05,
-  activeOpacity: 0.85,
+  activeOpacity: 0.65,
   fadeSpeedIn: 0.1,    // Fast activation
   fadeSpeedOut: 0.015, // Slow fade out (approx 1.2s at 60fps)
   scale: 4.5,          // Global scale for constellations

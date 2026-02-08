@@ -2,7 +2,7 @@
 import * as THREE from "three";
 
 export function createStardust() {
-  const particleCount = 250; // Pool size
+  const particleCount = 150; // Pool size
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(particleCount * 3);
   const sizes = new Float32Array(particleCount);
