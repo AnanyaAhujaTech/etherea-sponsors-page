@@ -7,7 +7,7 @@ function createCircleTexture() {
   const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
   gradient.addColorStop(0.3, "rgb(132, 210, 255)");
-  gradient.addColorStop(1, "rgba(29, 0, 117, 0.97)");
+  gradient.addColorStop(1, "rgba(18, 0, 73, 0.97)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(canvas);
